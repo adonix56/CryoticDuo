@@ -13,3 +13,15 @@ ACrypticDuoGameMode::ACrypticDuoGameMode()
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
 }
+
+void ACrypticDuoGameMode::HostLANGame()
+{
+	GetWorld()->ServerTravel("Game/ThirdPerson/Maps/ThirdPersonMap?listen");
+}
+
+void ACrypticDuoGameMode::JoinLANGame()
+{
+	if (APlayerController* PC = GetGameInstance()->GetFirstLocalPlayerController()) {
+		PC->ClientTravel("192.168.7.172", TRAVEL_Absolute);
+	}
+}

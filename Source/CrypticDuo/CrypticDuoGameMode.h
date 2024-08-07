@@ -13,6 +13,12 @@ class ACrypticDuoGameMode : public AGameModeBase
 
 public:
 	ACrypticDuoGameMode();
+
+	UFUNCTION(BlueprintCallable)
+	void HostLANGame();
+
+	UFUNCTION(BlueprintCallable)
+	void JoinLANGame();
 };
 
 
