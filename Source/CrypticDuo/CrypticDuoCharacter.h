@@ -46,7 +46,9 @@ class ACrypticDuoCharacter : public ACharacter
 
 public:
 	ACrypticDuoCharacter();
-	
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void ServerRPCFunction(int arg);
 
 protected:
 
@@ -56,6 +58,7 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 			
+	void SendMessage();
 
 protected:
 	// APawn interface
@@ -64,10 +67,16 @@ protected:
 	// To add mapping context
 	virtual void BeginPlay();
 
+	UPROPERTY(EditAnywhere)
+	int ValidateInt = 0;
+
 public:
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	UPROPERTY(EditAnywhere)
+	UStaticMesh* SphereActor;
 };
 

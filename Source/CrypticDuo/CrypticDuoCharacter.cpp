@@ -10,6 +10,8 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Net/UnrealNetwork.h"
+#include "Engine/StaticMeshActor.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -79,6 +81,7 @@ void ACrypticDuoCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInpu
 		
 		// Jumping
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACrypticDuoCharacter::SendMessage);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Moving
@@ -127,4 +130,47 @@ void ACrypticDuoCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
+}
+
+void ACrypticDuoCharacter::SendMessage()
+{
+	if (!HasAuthority()) {
+		ServerRPCFunction(ValidateInt);
+	}
+}
+
+void ACrypticDuoCharacter::ServerRPCFunction_Implementation(int arg) {
+	if (HasAuthority()) {
+#if false
+		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Cyan, FString::Printf(TEXT("Reliable Server Message Received Implementation!")));
+		UE_LOG(LogTemp, Warning, TEXT("Reliable Server Message Received"));
+#endif
+		if (!SphereActor) {
+			return;
+		}
+		AStaticMeshActor* StaticMesh = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass());
+		if (StaticMesh) {
+			StaticMesh->SetReplicates(true);
+			StaticMesh->SetReplicateMovement(true);
+			StaticMesh->SetMobility(EComponentMobility::Movable);
+			FVector SpawnLocation = GetActorLocation() + GetActorForwardVector() * 100.f + GetActorUpVector() * 50.f;
+			StaticMesh->SetActorLocation(SpawnLocation);
+			UStaticMeshComponent* StaticMeshComponent = StaticMesh->GetStaticMeshComponent();
+			if (StaticMeshComponent) {
+				StaticMeshComponent->SetIsReplicated(true);
+				StaticMeshComponent->SetSimulatePhysics(true);
+				StaticMeshComponent->SetStaticMesh(SphereActor);
+			}
+		}
+	}
+#if false
+	else {
+		GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Magenta, FString::Printf(TEXT("Reliable Client Message Received Implementation!")));
+		UE_LOG(LogTemp, Warning, TEXT("Reliable Client Message Received"));
+	}
+#endif
+}
+
+bool ACrypticDuoCharacter::ServerRPCFunction_Validate(int arg) {
+	return (arg >= 0 && arg <= 100);
 }
