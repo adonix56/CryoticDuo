@@ -12,6 +12,7 @@
 #include "InputActionValue.h"
 #include "Net/UnrealNetwork.h"
 #include "Engine/StaticMeshActor.h"
+#include "Kismet/GameplayStatics.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -135,7 +136,13 @@ void ACrypticDuoCharacter::Look(const FInputActionValue& Value)
 void ACrypticDuoCharacter::SendMessage()
 {
 	if (!HasAuthority()) {
-		ServerRPCFunction(ValidateInt);
+		TArray<AActor*> Characters;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), ACrypticDuoCharacter::StaticClass(), Characters);
+		for (AActor* Character : Characters) {
+			if (ACrypticDuoCharacter* CDChar = Cast<ACrypticDuoCharacter>(Character)) {
+				CDChar->ServerRPCFunction(ValidateInt);
+			}
+		}
 	}
 }
 
@@ -148,7 +155,9 @@ void ACrypticDuoCharacter::ServerRPCFunction_Implementation(int arg) {
 		if (!SphereActor) {
 			return;
 		}
-		AStaticMeshActor* StaticMesh = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass());
+		FActorSpawnParameters SpawnParameters;
+		SpawnParameters.Owner = this;
+		AStaticMeshActor* StaticMesh = GetWorld()->SpawnActor<AStaticMeshActor>(SpawnParameters);
 		if (StaticMesh) {
 			StaticMesh->SetReplicates(true);
 			StaticMesh->SetReplicateMovement(true);
@@ -173,4 +182,12 @@ void ACrypticDuoCharacter::ServerRPCFunction_Implementation(int arg) {
 
 bool ACrypticDuoCharacter::ServerRPCFunction_Validate(int arg) {
 	return (arg >= 0 && arg <= 100);
+}
+
+void ACrypticDuoCharacter::ClientRPCFunction_Implementation() {
+	if (HasAuthority()) {
+		if (Explosion) {
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Explosion, GetTransform(), true, EPSCPoolMethod::AutoRelease);
+		}
+	}
 }

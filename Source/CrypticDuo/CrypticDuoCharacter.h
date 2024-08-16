@@ -50,6 +50,9 @@ public:
 	UFUNCTION(Server, Reliable, WithValidation)
 	void ServerRPCFunction(int arg);
 
+	UFUNCTION(Client, Reliable, BlueprintCallable)
+	void ClientRPCFunction();
+
 protected:
 
 	/** Called for movement input */
@@ -78,5 +81,8 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	UStaticMesh* SphereActor;
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* Explosion;
 };
 
